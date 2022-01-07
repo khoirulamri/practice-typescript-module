@@ -5,9 +5,15 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "lint": "eslint --config .eslintrc.js --ext .ts .",
     "test": "NODE_ENV='test' ts-node -O '{\"module\":\"commonjs\"}' node_modules/jest/bin/jest.js",
-    "coverage": "NODE_ENV='test' jest --coverage"
+    "coverage": "NODE_ENV='test' jest --coverage",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
