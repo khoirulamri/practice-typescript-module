@@ -1,0 +1,41 @@
+{
+  "name": "practice-typescript-module",
+  "version": "1.0.0",
+  "description": "practice typescript module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "lint": "eslint --config .eslintrc.js --ext .ts .",
+    "test": "NODE_ENV='test' ts-node -O '{\"module\":\"commonjs\"}' node_modules/jest/bin/jest.js",
+    "coverage": "NODE_ENV='test' jest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/khoirulamri/practice-typescript-module.git"
+  },
+  "keywords": ["practice","typescript","module"],
+  "author": "Khoirul amri",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/khoirulamri/practice-typescript-module/issues"
+  },
+  "homepage": "https://github.com/khoirulamri/practice-typescript-module#readme",
+  "devDependencies": {
+    "@types/jest": "^27.4.0",
+    "@typescript-eslint/eslint-plugin": "^5.9.0",
+    "@typescript-eslint/parser": "^5.9.0",
+    "eslint": "^8.6.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-no-array-reduce": "^1.0.40",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^27.4.7",
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.2",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  },
+  "files": [
+    "src/**/*"
+  ]
+}
