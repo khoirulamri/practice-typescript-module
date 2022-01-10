@@ -1,6 +1,5 @@
 import tagGenerator from 'etag';
 import { Request, Response, NextFunction } from 'express';
-import { RedisClientType } from 'redis';
 
 import { responseEndOverrider } from './utils/response-end-overrider';
 
@@ -22,7 +21,7 @@ export interface ExpressCacheOptions {
   /**
    * Redis Client
    */
-  redisClient: RedisClientType<any>;
+  redisClient: any;
   /**
    * Header Cache Name on Request. Default is "if-none-match":
    */
@@ -88,7 +87,7 @@ export default class ExpressCache {
   private keyPrefix: string;
   private tagPrefix: string;
   private ttl: number;
-  private redisClient: RedisClientType<any>;
+  private redisClient: any;
   private requestHeaderName: string;
   private responseHeaderName: string;
   private readCacheErrHandler: ExpressCacheErrorHandler = (err) => {
