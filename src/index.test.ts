@@ -1,19 +1,33 @@
-import { MathSum } from "./index";
+import ExpressCache from './index';
 
-test("should be throw error number is required", () => {
-  try {
-    MathSum();
-  } catch (err: Error | any) {
-    expect(err.message).toBe("numbers are required");
-  }
+jest.mock('redis', () => jest.requireActual('redis-mock'));
+
+import redis from 'redis';
+
+describe('class construction options', () => {
+  test('can instantiate class with required options', async () => {
+    const client = await redis.createClient();
+    console.log('save',await client.set('product-','test redis'));
+console.log(await client.keys('product*'));
+    const expressCache = new ExpressCache({
+      redisClient: client
+    });
+
+    expect(expressCache).toEqual(expect.any(ExpressCache));
+  });
 });
 
-test("should be return sum of number", () => {
-  const num1 = 10;
-  const num2 = 20;
-  const num3 = 30;
+// describe('error handler', () => {
 
-  const sum = MathSum(num1, num2, num3);
+//   test('should throw error on read cache from redis', async () => {
+//     redis.
+//     const client = await redis.createClient();
+    
 
-  expect(sum).toBe(num1 + num2 + num3);
-});
+//     const expressCache = new ExpressCache({
+//       redisClient: client
+//     });
+
+//     await client.disconnect();
+//   })
+// });

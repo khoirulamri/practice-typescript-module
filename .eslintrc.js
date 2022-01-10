@@ -3,7 +3,6 @@ module.exports = {
 
   extends: [
     'plugin:@typescript-eslint/recommended',
-    'prettier',
     'plugin:prettier/recommended',
   ],
 
@@ -33,7 +32,7 @@ module.exports = {
   },
 
   parserOptions: {
-    ecmaVersion: 'es2020',
+    ecmaVersion: 'es6',
     sourceType: 'module',
   },
 

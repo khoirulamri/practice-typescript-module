@@ -2,18 +2,18 @@
   "name": "practice-typescript-module",
   "version": "1.0.0",
   "description": "practice typescript module",
-  "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "lint": "eslint --config .eslintrc.js --ext .ts .",
-    "test": "NODE_ENV='test' ts-node -O '{\"module\":\"commonjs\"}' node_modules/jest/bin/jest.js",
-    "coverage": "NODE_ENV='test' jest --coverage",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint",
     "version": "npm run format && git add -A src",
     "postversion": "git push && git push --tags"
+    "lint": "eslint --config .eslintrc.js --ext .ts ./src",
+    "test": "NODE_ENV='test' ts-node -O '{\"module\":\"commonjs\"}' node_modules/jest/bin/jest.js --runInBand --verbose",
+    "coverage": "npm run test -- --coverage"
   },
   "repository": {
     "type": "git",
@@ -27,21 +27,33 @@
   },
   "homepage": "https://github.com/khoirulamri/practice-typescript-module#readme",
   "devDependencies": {
+    "@types/etag": "^1.8.1",
+    "@types/express": "^4.17.13",
     "@types/jest": "^27.4.0",
+    "@types/node": "^17.0.8",
+    "@types/redis-mock": "^0.17.1",
+    "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
     "eslint": "^8.6.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-no-array-reduce": "^1.0.40",
     "eslint-plugin-prettier": "^4.0.0",
+    "express": "^4.17.2",
+    "husky": "^7.0.4",
     "jest": "^27.4.7",
     "prettier": "^2.5.1",
+    "redis": "^4.0.1",
+    "redis-mock": "^0.56.3",
+    "supertest": "^6.1.6",
     "ts-jest": "^27.1.2",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.4"
   },
-  "files": [
-    "src/**/*"
-  ]
+  "dependencies": {
+    "etag": "^1.8.1"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  }
 }
