@@ -1,8 +1,8 @@
 {
   "name": "practice-typescript-module",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "practice typescript module",
-  "types": "lib/index.d.ts",
+  "types": "dist/index.d.ts",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -10,7 +10,7 @@
     "prepublishOnly": "npm test && npm run lint",
     "preversion": "npm run lint",
     "version": "npm run format && git add -A src",
-    "postversion": "git push && git push --tags"
+    "postversion": "git push && git push --tags",
     "lint": "eslint --config .eslintrc.js --ext .ts ./src",
     "test": "NODE_ENV='test' ts-node -O '{\"module\":\"commonjs\"}' node_modules/jest/bin/jest.js --runInBand --verbose",
     "coverage": "npm run test -- --coverage"
@@ -19,7 +19,11 @@
     "type": "git",
     "url": "git+https://github.com/khoirulamri/practice-typescript-module.git"
   },
-  "keywords": ["practice","typescript","module"],
+  "keywords": [
+    "practice",
+    "typescript",
+    "module"
+  ],
   "author": "Khoirul amri",
   "license": "ISC",
   "bugs": {
