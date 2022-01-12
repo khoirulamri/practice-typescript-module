@@ -1,6 +1,5 @@
 import tagGenerator from 'etag';
 import { Request, Response, NextFunction } from 'express';
-import IORedis from 'ioredis';
 
 import { RedisClient, RedisClientWrapper } from './utils/redis-client-wrapper';
 import { responseEndOverrider } from './utils/response-end-overrider';
