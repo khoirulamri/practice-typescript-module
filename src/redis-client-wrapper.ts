@@ -71,43 +71,19 @@ class IORedisWrapper implements RedisClient {
   }
 
   async del(...keys: string[]): Promise<number> {
-    try {
-      return await this.client.del(...keys);
-    } catch (err) {
-      console.log('===err del', err);
-    }
-
-    return 0;
+    return await this.client.del(...keys);
   }
 
   async get(key: string): Promise<string | null> {
-    try {
-      return await this.client.get(key);
-    } catch (err) {
-      console.log('===err get', err);
-    }
-    return null;
+    return await this.client.get(key);
   }
 
   async keys(key: string): Promise<string[]> {
-    try {
-      const k = await this.client.keys(key);
-      console.log('===k', k);
-
-      return k;
-    } catch (err) {
-      console.log('===err keys', err);
-    }
-
-    return [];
+    return await this.client.keys(key);
   }
 
   async set(key: string, value: string, opts: { EX: number }): Promise<void> {
-    try {
-      await this.client.set(key, value, 'EX', opts.EX);
-    } catch (err) {
-      console.log('===err set', err);
-    }
+    await this.client.set(key, value, 'EX', opts.EX);
   }
 }
 
