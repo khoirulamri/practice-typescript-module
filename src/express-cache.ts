@@ -88,7 +88,7 @@ interface DataCache {
 type ExpressCacheRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 type ExpressCacheValidateFunction = (httpStatusCode: number, res: Response, req: Request) => boolean;
 
-export default class ExpressCache {
+export class ExpressCache {
   private keyPrefix: string;
   private tagPrefix: string;
   private ttl: number;
