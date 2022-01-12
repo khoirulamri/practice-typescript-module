@@ -1,6 +1,8 @@
 import IORedis from 'ioredis';
 import Redis from 'redis';
 
+import { REDIS_PACKAGE } from './constans';
+
 export interface RedisClient {
   del(...keys: string[]): Promise<number>;
   get(key: string): Promise<string | null>;
@@ -62,7 +64,6 @@ class RedisWrapper implements RedisClient {
     });
   }
 }
-
 class IORedisWrapper implements RedisClient {
   private client: IORedis.Redis;
   constructor(client: IORedis.Redis) {
@@ -90,7 +91,10 @@ class IORedisWrapper implements RedisClient {
 
   async keys(key: string): Promise<string[]> {
     try {
-      return await this.client.keys(key);
+      const k = await this.client.keys(key);
+      console.log('===k', k);
+
+      return k;
     } catch (err) {
       console.log('===err keys', err);
     }
@@ -112,10 +116,14 @@ class IORedisWrapper implements RedisClient {
 export class RedisClientWrapper {
   private clientWrapper: RedisClient;
 
-  constructor(packageName: string, client: any) {
-    if (packageName === 'redis') {
+  constructor(packageName: REDIS_PACKAGE, client: any) {
+    if (!client) {
+      throw new Error('redis client is required');
+    }
+
+    if (packageName === REDIS_PACKAGE.REDIS) {
       this.clientWrapper = new RedisWrapper(client);
-    } else if (packageName === 'ioredis') {
+    } else if (packageName === REDIS_PACKAGE.IOREDIS) {
       this.clientWrapper = new IORedisWrapper(client);
     } else {
       throw new Error('redis client only support from packages: redis, ioredis');

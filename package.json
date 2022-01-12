@@ -1,6 +1,6 @@
 {
   "name": "practice-typescript-module",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "practice typescript module",
   "types": "dist/index.d.ts",
   "main": "dist/index.js",

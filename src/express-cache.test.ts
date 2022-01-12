@@ -1,16 +1,17 @@
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
-import redis from 'redis';
+import { createClient } from 'redis';
 
-import ExpressCache from './index';
+import { REDIS_PACKAGE } from './constans';
+import ExpressCache from './express-cache';
 
 describe('class construction options', () => {
   test('can instantiate class with required options', async () => {
-    const client = await redis.createClient();
+    const client = await createClient();
 
     const expressCache = new ExpressCache({
       redis: {
-        packageName: 'redis',
+        package: REDIS_PACKAGE.REDIS,
         client,
       },
     });
