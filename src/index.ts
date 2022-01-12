@@ -1,6 +1,8 @@
 import tagGenerator from 'etag';
 import { Request, Response, NextFunction } from 'express';
+import IORedis from 'ioredis';
 
+import { RedisClient, RedisClientWrapper } from './utils/redis-client-wrapper';
 import { responseEndOverrider } from './utils/response-end-overrider';
 
 export interface ExpressCacheErrorHandler {
@@ -21,7 +23,10 @@ export interface ExpressCacheOptions {
   /**
    * Redis Client
    */
-  redisClient: any;
+  redis: {
+    packageName: string;
+    client: any;
+  };
   /**
    * Header Cache Name on Request. Default is "if-none-match":
    */
@@ -87,7 +92,7 @@ export default class ExpressCache {
   private keyPrefix: string;
   private tagPrefix: string;
   private ttl: number;
-  private redisClient: any;
+  private wrappedRedisClient: RedisClient;
   private requestHeaderName: string;
   private responseHeaderName: string;
   private readCacheErrHandler: ExpressCacheErrorHandler = (err) => {
@@ -101,13 +106,13 @@ export default class ExpressCache {
   };
 
   constructor(opts: ExpressCacheOptions) {
-    if (!opts.redisClient) {
+    if (!opts.redis || !opts.redis.packageName || !opts.redis.client) {
       throw new Error('redis client is required');
     }
 
-    this.keyPrefix = opts.keyPrefix || 'expch';
+    this.wrappedRedisClient = new RedisClientWrapper(opts.redis.packageName, opts.redis.client).getWrapper();
+    this.keyPrefix = opts.keyPrefix || 'express-cache:';
     this.ttl = opts.ttl || 60;
-    this.redisClient = opts.redisClient;
     this.requestHeaderName = opts.requestHeaderName || 'if-none-match';
     this.responseHeaderName = opts.responseHeaderName || 'etag';
     this.tagPrefix = '';
@@ -194,7 +199,7 @@ export default class ExpressCache {
   }
 
   private async getCache(key: string): Promise<DataCache | null> {
-    const data = (await this.redisClient.get(key)) as string | null;
+    const data = await this.wrappedRedisClient.get(key);
     if (!data) {
       return null;
     }
@@ -204,7 +209,7 @@ export default class ExpressCache {
   }
 
   private async setCache(key: string, data: any): Promise<void> {
-    await this.redisClient.set(key, JSON.stringify(data), {
+    await this.wrappedRedisClient.set(key, JSON.stringify(data), {
       EX: this.ttl,
     });
   }
@@ -241,13 +246,13 @@ export default class ExpressCache {
 
           try {
             const results = await Promise.all<Promise<string[]>[]>(
-              keyPatterns.map((keyPattern) => this.redisClient.keys(keyPattern)),
+              keyPatterns.map((keyPattern) => this.wrappedRedisClient.keys(keyPattern)),
             );
 
             const keys: string[] = ([] as string[]).concat(...results);
 
             if (keys.length > 0) {
-              await this.redisClient.del(keys);
+              await await this.wrappedRedisClient.del(...keys);
             }
           } catch (err: Error | any) {
             await this.clearCacheErrHandler(err, req, res, next);

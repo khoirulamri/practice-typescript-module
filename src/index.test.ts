@@ -9,7 +9,10 @@ describe('class construction options', () => {
     const client = await redis.createClient();
 
     const expressCache = new ExpressCache({
-      redisClient: client,
+      redis: {
+        packageName: 'redis',
+        client,
+      },
     });
 
     expect(expressCache).toEqual(expect.any(ExpressCache));
