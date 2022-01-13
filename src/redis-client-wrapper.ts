@@ -7,10 +7,10 @@ export interface RedisClient {
   del(...keys: string[]): Promise<number>;
   get(key: string): Promise<string | null>;
   keys(key: string): Promise<string[]>;
-  set(key: string, value: string, opts: { EX: number }): Promise<void>;
+  set(key: string, value: string, opts?: { EX: number }): Promise<void>;
 }
 
-class RedisWrapper implements RedisClient {
+export class RedisWrapper implements RedisClient {
   private client: Redis.RedisClient;
   constructor(client: Redis.RedisClient) {
     this.client = client;
@@ -64,7 +64,7 @@ class RedisWrapper implements RedisClient {
     });
   }
 }
-class IORedisWrapper implements RedisClient {
+export class IORedisWrapper implements RedisClient {
   private client: IORedis.Redis;
   constructor(client: IORedis.Redis) {
     this.client = client;

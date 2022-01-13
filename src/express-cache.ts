@@ -106,7 +106,15 @@ export class ExpressCache {
   };
 
   constructor(opts: ExpressCacheOptions) {
-    if (!opts.redis || !opts.redis.package || !opts.redis.client) {
+    if (!opts.redis) {
+      throw new Error('redis options is required');
+    }
+
+    if (!opts.redis.package) {
+      throw new Error('redis package is required');
+    }
+
+    if (!opts.redis.client) {
       throw new Error('redis client is required');
     }
 
