@@ -88,7 +88,7 @@ interface DataCache {
 type ExpressCacheRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 type ExpressCacheValidateFunction = (httpStatusCode: number, res: Response, req: Request) => boolean;
 
-export default class ExpressCache {
+export class ExpressCache {
   private keyPrefix: string;
   private tagPrefix: string;
   private ttl: number;
@@ -106,7 +106,15 @@ export default class ExpressCache {
   };
 
   constructor(opts: ExpressCacheOptions) {
-    if (!opts.redis || !opts.redis.package || !opts.redis.client) {
+    if (!opts.redis) {
+      throw new Error('redis options is required');
+    }
+
+    if (!opts.redis.package) {
+      throw new Error('redis package is required');
+    }
+
+    if (!opts.redis.client) {
       throw new Error('redis client is required');
     }
 
@@ -130,18 +138,18 @@ export default class ExpressCache {
     }
   }
 
-  middleware(opts: ExpressCacheMiddlewareOptions): ExpressCacheRequestHandler {
+  middleware(opts?: ExpressCacheMiddlewareOptions): ExpressCacheRequestHandler {
     let isCanSaveFn: (httpStatusCode: number, res: Response, req: Request) => boolean = (httpStatusCode: number) =>
       httpStatusCode >= 200 && httpStatusCode <= 299;
 
-    if (opts.isCanSaveFn && typeof opts.isCanSaveFn === 'function') {
+    if (opts && opts.isCanSaveFn && typeof opts.isCanSaveFn === 'function') {
       isCanSaveFn = opts.isCanSaveFn;
     }
 
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-      if (opts.tagPrefix && typeof opts.tagPrefix === 'string') {
+      if (opts && opts.tagPrefix && typeof opts.tagPrefix === 'string') {
         this.tagPrefix = opts.tagPrefix;
-      } else if (opts.tagPrefix && typeof opts.tagPrefix === 'function') {
+      } else if (opts && opts.tagPrefix && typeof opts.tagPrefix === 'function') {
         this.tagPrefix = opts.tagPrefix(req);
       } else {
         const queryString = Object.keys(req.query).length > 0 ? JSON.stringify(req.query) : '';
@@ -183,7 +191,7 @@ export default class ExpressCache {
           };
 
           const key = this.getKey(tag);
-          await this.setCache(key, data);
+          await this.wrappedRedisClient.setex(key, this.ttl, JSON.stringify(data));
         } catch (err: Error | any) {
           await this.storeCacheErrHandler(err, req, res, next);
         }
@@ -206,12 +214,6 @@ export default class ExpressCache {
 
     const cache: DataCache = JSON.parse(data);
     return cache;
-  }
-
-  private async setCache(key: string, data: any): Promise<void> {
-    await this.wrappedRedisClient.set(key, JSON.stringify(data), {
-      EX: this.ttl,
-    });
   }
 
   clear(opts: ExpressCacheClearOptions): ExpressCacheRequestHandler {
@@ -237,11 +239,9 @@ export default class ExpressCache {
           keyPatterns.push(keyPattern);
         }
       }
-
       if (keyPatterns.length > 0) {
         const fn = async () => {
           const isCanClear = await isCanClearFn(res.statusCode, res, req);
-
           if (!isCanClear) {
             return;
           }
@@ -252,7 +252,6 @@ export default class ExpressCache {
             );
 
             const keys: string[] = ([] as string[]).concat(...results);
-
             if (keys.length > 0) {
               await this.wrappedRedisClient.del(...keys);
             }

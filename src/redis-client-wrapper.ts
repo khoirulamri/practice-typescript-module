@@ -7,10 +7,10 @@ export interface RedisClient {
   del(...keys: string[]): Promise<number>;
   get(key: string): Promise<string | null>;
   keys(key: string): Promise<string[]>;
-  set(key: string, value: string, opts: { EX: number }): Promise<void>;
+  setex(key: string, ex: number, value: string): Promise<void>;
 }
 
-class RedisWrapper implements RedisClient {
+export class RedisWrapper implements RedisClient {
   private client: Redis.RedisClient;
   constructor(client: Redis.RedisClient) {
     this.client = client;
@@ -52,9 +52,9 @@ class RedisWrapper implements RedisClient {
     });
   }
 
-  set(key: string, value: string, opts: { EX: number }): Promise<void> {
+  setex(key: string, ex: number, value: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.client.set(key, value, 'EX', opts.EX, (err) => {
+      this.client.setex(key, ex, value, (err) => {
         if (err) {
           return reject(err);
         }
@@ -64,50 +64,49 @@ class RedisWrapper implements RedisClient {
     });
   }
 }
-class IORedisWrapper implements RedisClient {
+export class IORedisWrapper implements RedisClient {
   private client: IORedis.Redis;
   constructor(client: IORedis.Redis) {
     this.client = client;
   }
 
   async del(...keys: string[]): Promise<number> {
-    try {
-      return await this.client.del(...keys);
-    } catch (err) {
-      console.log('===err del', err);
-    }
-
-    return 0;
+    return await this.client.del(...keys);
   }
 
   async get(key: string): Promise<string | null> {
-    try {
-      return await this.client.get(key);
-    } catch (err) {
-      console.log('===err get', err);
-    }
-    return null;
+    return await this.client.get(key);
   }
 
   async keys(key: string): Promise<string[]> {
-    try {
-      const k = await this.client.keys(key);
-      console.log('===k', k);
-
-      return k;
-    } catch (err) {
-      console.log('===err keys', err);
-    }
-
-    return [];
+    return await this.client.keys(key);
   }
 
-  async set(key: string, value: string, opts: { EX: number }): Promise<void> {
-    try {
-      await this.client.set(key, value, 'EX', opts.EX);
-    } catch (err) {
-      console.log('===err set', err);
-    }
+  async setex(key: string, ex: number, value: string): Promise<void> {
+    await this.client.setex(key, ex, value);
+  }
+}
+
+export class AsyncRedisWrapper implements RedisClient {
+  private client: any;
+  constructor(client: any) {
+    this.client = client;
+  }
+
+  async del(...keys: string[]): Promise<number> {
+    return await this.client.del(...keys);
+  }
+
+  async get(key: string): Promise<string | null> {
+    return await this.client.get(key);
+  }
+
+  async keys(key: string): Promise<string[]> {
+    return await this.client.keys(key);
+  }
+
+  async setex(key: string, ex: number, value: string): Promise<void> {
+    await this.client.setex(key, ex, value);
   }
 }
 
@@ -125,8 +124,10 @@ export class RedisClientWrapper {
       this.clientWrapper = new RedisWrapper(client);
     } else if (packageName === REDIS_PACKAGE.IOREDIS) {
       this.clientWrapper = new IORedisWrapper(client);
+    } else if (packageName === REDIS_PACKAGE.ASYNC_REDIS) {
+      this.clientWrapper = new AsyncRedisWrapper(client);
     } else {
-      throw new Error('redis client only support from packages: redis, ioredis');
+      throw new Error('redis client only support from packages: redis, ioredis, async-redis');
     }
   }
 
