@@ -1,17 +1,18 @@
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 jest.mock('ioredis', () => require('ioredis-mock/jest'));
 
+import AsyncRedis from 'async-redis';
 import IORedis from 'ioredis';
-import redis from 'redis';
+import Redis from 'redis';
 
 import { REDIS_PACKAGE } from './constans';
-import { IORedisWrapper, RedisClientWrapper, RedisWrapper } from './redis-client-wrapper';
+import { AsyncRedisWrapper, IORedisWrapper, RedisClientWrapper, RedisWrapper } from './redis-client-wrapper';
 
 describe('wrapper redis package', () => {
   const messageError = 'redis-error-message';
-  let redisClient: redis.RedisClient;
+  let redisClient: Redis.RedisClient;
   beforeAll(async () => {
-    redisClient = await redis.createClient();
+    redisClient = await Redis.createClient();
   });
 
   test('should return wrapper instance of RedisWrapper', async () => {
@@ -20,33 +21,31 @@ describe('wrapper redis package', () => {
   });
 
   describe('basic method', () => {
-    test('should be able to call redis set method with success', async () => {
+    test('should be able to call redis setex method with success', async () => {
       const key = 'foo';
       const value = 'bar';
-      const mode = 'EX';
       const expire = 100;
 
-      redisClient.set = jest.fn().mockImplementationOnce((...args) => args[4](null));
+      redisClient.setex = jest.fn().mockImplementationOnce((...args) => args[3](null));
 
       const wrapper = new RedisClientWrapper(REDIS_PACKAGE.REDIS, redisClient).getWrapper();
-      await wrapper.set(key, value, { [mode]: 100 });
-      expect(redisClient.set).toBeCalledTimes(1);
-      expect(redisClient.set).toBeCalledWith(key, value, mode, expire, expect.any(Function));
+      await wrapper.setex(key, expire, value);
+      expect(redisClient.setex).toBeCalledTimes(1);
+      expect(redisClient.setex).toBeCalledWith(key, expire, value, expect.any(Function));
     });
 
-    test('should be able to call redis set method with error', async () => {
+    test('should be able to call redis setex method with error', async () => {
       const key = 'foo';
       const value = 'bar';
-      const mode = 'EX';
       const expire = 100;
 
-      redisClient.set = jest.fn().mockImplementationOnce((...args) => args[4](new Error(messageError)));
+      redisClient.setex = jest.fn().mockImplementationOnce((...args) => args[3](new Error(messageError)));
 
       const wrapper = new RedisClientWrapper(REDIS_PACKAGE.REDIS, redisClient).getWrapper();
-      expect(async () => await wrapper.set(key, value, { [mode]: expire })).rejects.toThrow(messageError);
+      expect(async () => await wrapper.setex(key, expire, value)).rejects.toThrow(messageError);
 
-      expect(redisClient.set).toBeCalledTimes(1);
-      expect(redisClient.set).toBeCalledWith(key, value, mode, expire, expect.any(Function));
+      expect(redisClient.setex).toBeCalledTimes(1);
+      expect(redisClient.setex).toBeCalledWith(key, expire, value, expect.any(Function));
     });
 
     test('should be able to call redis get method with success', async () => {
@@ -149,18 +148,17 @@ describe('wrapper ioredis package', () => {
   });
 
   describe('basic method', () => {
-    test('should be able to call ioredis set method', async () => {
+    test('should be able to call ioredis setex method', async () => {
       const key = 'foo';
       const value = 'bar';
-      const mode = 'EX';
       const expire = 100;
 
-      ioRedisClient.set = jest.fn().mockReturnValueOnce(true);
+      ioRedisClient.setex = jest.fn().mockReturnValueOnce(true);
 
       const wrapper = new RedisClientWrapper(REDIS_PACKAGE.IOREDIS, ioRedisClient).getWrapper();
-      await wrapper.set(key, value, { [mode]: 100 });
-      expect(ioRedisClient.set).toBeCalledTimes(1);
-      expect(ioRedisClient.set).toBeCalledWith(key, value, mode, expire);
+      await wrapper.setex(key, expire, value);
+      expect(ioRedisClient.setex).toBeCalledTimes(1);
+      expect(ioRedisClient.setex).toBeCalledWith(key, expire, value);
     });
 
     test('should be able to call ioredis get method', async () => {
@@ -200,6 +198,76 @@ describe('wrapper ioredis package', () => {
       expect(keys).toEqual(expect.arrayContaining(foundKey));
       expect(ioRedisClient.keys).toBeCalledTimes(1);
       expect(ioRedisClient.keys).toBeCalledWith(pattern);
+    });
+  });
+});
+
+describe('wrapper async-redis package', () => {
+  let asyncRedisClient: any;
+
+  beforeAll(async () => {
+    const mockRedis = {};
+    AsyncRedis.createClient = () => mockRedis as any;
+
+    asyncRedisClient = await AsyncRedis.createClient();
+  });
+
+  test('should return wrapper instance of AsyncRedisWrapper', () => {
+    const wrapper = new RedisClientWrapper(REDIS_PACKAGE.ASYNC_REDIS, asyncRedisClient).getWrapper();
+    expect(wrapper).toBeInstanceOf(AsyncRedisWrapper);
+  });
+
+  describe('basic method', () => {
+    test('should be able to call async-redis setex method', async () => {
+      const key = 'foo';
+      const value = 'bar';
+      const expire = 100;
+
+      asyncRedisClient.setex = jest.fn().mockReturnValueOnce(true);
+
+      const wrapper = new RedisClientWrapper(REDIS_PACKAGE.ASYNC_REDIS, asyncRedisClient).getWrapper();
+      await wrapper.setex(key, expire, value);
+      expect(asyncRedisClient.setex).toBeCalledTimes(1);
+      expect(asyncRedisClient.setex).toBeCalledWith(key, expire, value);
+    });
+
+    test('should be able to call async-redis get method', async () => {
+      const key = 'foo';
+      const value = 'bar';
+
+      asyncRedisClient.get = jest.fn().mockReturnValueOnce(value);
+
+      const wrapper = new RedisClientWrapper(REDIS_PACKAGE.ASYNC_REDIS, asyncRedisClient).getWrapper();
+      const result = await wrapper.get(key);
+      expect(result).toEqual(value);
+      expect(asyncRedisClient.get).toBeCalledTimes(1);
+      expect(asyncRedisClient.get).toBeCalledWith(key);
+    });
+
+    test('should be able to call async-redis del method', async () => {
+      const key1 = 'foo';
+      const key2 = 'bar';
+
+      asyncRedisClient.del = jest.fn().mockReturnValueOnce(2);
+
+      const wrapper = new RedisClientWrapper(REDIS_PACKAGE.ASYNC_REDIS, asyncRedisClient).getWrapper();
+      const result = await wrapper.del(key1, key2);
+      expect(result).toEqual(2);
+      expect(asyncRedisClient.del).toBeCalledTimes(1);
+      expect(asyncRedisClient.del).toBeCalledWith(key1, key2);
+    });
+
+    test('should be able to call async-redis keys method', async () => {
+      const pattern = 'foo*';
+      const foundKey = ['foobar', 'foobir', 'foobur', 'foober', 'foobor'];
+
+      asyncRedisClient.keys = jest.fn().mockReturnValueOnce(foundKey);
+
+      const wrapper = new RedisClientWrapper(REDIS_PACKAGE.ASYNC_REDIS, asyncRedisClient).getWrapper();
+      const keys = await wrapper.keys(pattern);
+      expect(keys).toEqual(expect.arrayContaining(foundKey));
+      expect(asyncRedisClient.keys).toBeCalledTimes(1);
+      expect(asyncRedisClient.keys).toBeCalledWith(pattern);
     });
   });
 });

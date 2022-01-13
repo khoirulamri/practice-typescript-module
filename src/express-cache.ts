@@ -217,9 +217,7 @@ export class ExpressCache {
   }
 
   private async setCache(key: string, data: any): Promise<void> {
-    await this.wrappedRedisClient.set(key, JSON.stringify(data), {
-      EX: this.ttl,
-    });
+    await this.wrappedRedisClient.setex(key, this.ttl, JSON.stringify(data));
   }
 
   clear(opts: ExpressCacheClearOptions): ExpressCacheRequestHandler {
